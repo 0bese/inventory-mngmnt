@@ -16,5 +16,14 @@ export const renderPredictions = (predictions, ctx) => {
     //fill
     ctx.fillStyle = `rgba(255, 0, 0, ${isPerson ? 0.2 : 0})`;
     ctx.fillRect(x, y, width, height);
+
+    //label
+    ctx.fillstyle = isPerson ? "#FF0000" : "#00FFFF";
+    const textWidth = ctx.measureText(prediction.class).width;
+    const textHeight = parseInt(font, 10);
+    ctx.fillRect(x, y, textWidth + 4, textHeight + 4);
+
+    ctx.fillStyle = "#000000";
+    ctx.fillText(prediction.class, x, y);
   });
 };

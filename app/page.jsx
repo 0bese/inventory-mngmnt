@@ -14,6 +14,7 @@ import { Trash, CirclePlus } from "lucide-react";
 import Webcam from "react-webcam";
 import { load as cocoSSDLload } from "@tensorflow-models/coco-ssd";
 import * as tf from "@tensorflow/tfjs";
+import { renderPredictions } from "@/utils/render-predictions";
 
 let detectInterval;
 export default function Home() {
@@ -62,7 +63,7 @@ export default function Home() {
       const detectedObjects = await net.detect(
         webcamRef.current.video,
         undefined,
-        0.9
+        0.8
       );
 
       console.log(detectedObjects);
