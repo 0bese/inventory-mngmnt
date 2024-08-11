@@ -12,70 +12,65 @@ import {
 } from "firebase/firestore";
 import { Trash, CirclePlus } from "lucide-react";
 import Webcam from "react-webcam";
-import { load as cocoSSDLload } from "@tensorflow-models/coco-ssd";
-import * as tf from "@tensorflow/tfjs";
-import { renderPredictions } from "@/utils/render-predictions";
+import Image from "next/image";
+import axios from "axios";
+// import { load as cocoSSDLload } from "@tensorflow-models/coco-ssd";
+// import * as tf from "@tensorflow/tfjs";
+// import { renderPredictions } from "@/utils/render-predictions";
 
-let detectInterval;
 export default function Home() {
   const [inventory, setInventory] = useState([]);
   const [open, setOpen] = useState(false);
   const [openCam, setOpenCam] = useState(false);
   const [itemName, setItemName] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [imgSrc, setImgSrc] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  // const { messages, input, handleInputChange, handleSubmit } = useChat();
 
-  //camera features
-  const webcamRef = useRef(null);
-  const canvasRef = useRef(null);
-
-  const showVideo = () => {
-    if (
-      webcamRef.current !== null &&
-      webcamRef.current.video?.readyState === 4
-    ) {
-      const videoWidth = webcamRef.current.video.videoWidth;
-      const videoHeight = webcamRef.current.video.videoHeight;
-
-      webcamRef.current.video.width = videoWidth;
-      webcamRef.current.video.height = videoHeight;
-    }
-  };
-
-  //ai detection using tensorflow coco-ssd
-  const runCoco = async () => {
-    setIsLoading(true);
-    const net = await cocoSSDLload();
-    setIsLoading(false);
-    detectInterval = setInterval(() => {
-      runObjectDetection(net);
-    }, 1000);
-  };
-
-  async function runObjectDetection(net) {
-    if (
-      canvasRef.current &&
-      webcamRef.current !== null &&
-      webcamRef.current.video?.readyState === 4
-    ) {
-      canvasRef.current.width = webcamRef.current.video.videoWidth;
-      canvasRef.current.height = webcamRef.current.video.videoHeight;
-
-      const detectedObjects = await net.detect(
-        webcamRef.current.video,
-        undefined,
-        0.8
-      );
-
-      console.log(detectedObjects);
-
-      const context = canvasRef.current.getContext("2d");
-      renderPredictions(detectedObjects, context);
+  async function handleImageInput() {
+    try {
+      const result = await axios.post("api/genai", { img: imgSrc });
+      console.log(result);
+    } catch (error) {
+      console.log("error");
     }
   }
 
+  //camera features
+  //const webcamRef = useRef(null);
+
+  // let w;
+  // let h;
+  // const showVideo = () => {
+  //   if (
+  //     webcamRef.current !== null &&
+  //     webcamRef.current.video?.readyState === 4
+  //   ) {
+  //     const videoWidth = webcamRef.current.video.videoWidth;
+  //     const videoHeight = webcamRef.current.video.videoHeight;
+
+  //     webcamRef.current.video.width = videoWidth;
+  //     webcamRef.current.video.height = videoHeight;
+  //     h = videoHeight;
+  //     w = videoWidth;
+  //   }
+  // };
+
+  //ai detection using tensorflow coco-ssd
+  // const runCoco = async () => {
+  //   setIsLoading(true);
+  //   const net = await cocoSSDLload();
+  //   setIsLoading(false);
+  //   detectInterval = setInterval(() => {
+  //     runObjectDetection(net);
+  //   }, 1000);
+  // };
+
+  //
+
   useEffect(() => {
-    runCoco();
-    showVideo();
+    // runCoco();
+    //showVideo();
   }, []);
 
   //inventory
@@ -171,6 +166,7 @@ export default function Home() {
             </div>
           </div>
         ))}
+        {imgSrc && <Image src={imgSrc} width={100} height={100} alt="smth" />}
       </div>
 
       <>
@@ -264,14 +260,26 @@ export default function Home() {
                     ) : (
                       <div className="relative">
                         <Webcam
-                          ref={webcamRef}
+                          // ref={webcamRef}
+                          mirrored={true}
+                          screenshotFormat="image/jpeg"
                           muted
                           className="rounded-lg w-full"
-                        />
-                        <canvas
-                          ref={canvasRef}
-                          className="absolute w-full h-full rounded-lg z-90 top-0 left-0"
-                        />
+                        >
+                          {({ getScreenshot }) => (
+                            <button
+                              className="bg-gray-500 text-white active:bg-gray-600 font-bold uppercase text-sm my-4 px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
+                              type="button"
+                              onClick={() => {
+                                let imageSrc = getScreenshot();
+                                setImgSrc(imageSrc);
+                              }}
+                            >
+                              Take Photo
+                            </button>
+                          )}
+                        </Webcam>
+                        <button onClick={handleImageInput}> send it</button>
                       </div>
                     )}
                   </div>
