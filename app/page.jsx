@@ -24,54 +24,23 @@ export default function Home() {
   const [openCam, setOpenCam] = useState(false);
   const [itemName, setItemName] = useState("");
   const [imgSrc, setImgSrc] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   // const { messages, input, handleInputChange, handleSubmit } = useChat();
 
   async function handleImageInput() {
     try {
       const result = await axios.post("api/genai", { img: imgSrc });
-      console.log(result);
+      if (result) {
+        let response = JSON.stringify(result);
+        let invntryItm = JSON.parse(JSON.parse(response).data);
+        addItem(invntryItm.itemName);
+        setImgSrc(null);
+        // console.log(invntryItm);
+      }
     } catch (error) {
-      console.log("error");
+      console.log(`This error is from HomePage.tsx 🚀: ${error}`);
     }
   }
-
-  //camera features
-  //const webcamRef = useRef(null);
-
-  // let w;
-  // let h;
-  // const showVideo = () => {
-  //   if (
-  //     webcamRef.current !== null &&
-  //     webcamRef.current.video?.readyState === 4
-  //   ) {
-  //     const videoWidth = webcamRef.current.video.videoWidth;
-  //     const videoHeight = webcamRef.current.video.videoHeight;
-
-  //     webcamRef.current.video.width = videoWidth;
-  //     webcamRef.current.video.height = videoHeight;
-  //     h = videoHeight;
-  //     w = videoWidth;
-  //   }
-  // };
-
-  //ai detection using tensorflow coco-ssd
-  // const runCoco = async () => {
-  //   setIsLoading(true);
-  //   const net = await cocoSSDLload();
-  //   setIsLoading(false);
-  //   detectInterval = setInterval(() => {
-  //     runObjectDetection(net);
-  //   }, 1000);
-  // };
-
-  //
-
-  useEffect(() => {
-    // runCoco();
-    //showVideo();
-  }, []);
 
   //inventory
   const updateInventory = async () => {
@@ -85,7 +54,6 @@ export default function Home() {
       });
     });
     setInventory(inventoryList);
-    console.log(inventoryList);
   };
 
   const removeItem = async (item) => {
@@ -131,9 +99,9 @@ export default function Home() {
     <div className="w-[100vw] h-screen bg-slate-200 ">
       <div className="max-w-4xl mx-auto flex flex-col items-center justify-center gap-3">
         <h1 className="text-3xl sm:text-5xl">Inventory Management</h1>
-        <div className="flex gap-5">
+        <div className="flex flex-row gap-5">
           <button
-            className="bg-pink-500 text-white active:bg-pink-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
+            className="bg-pink-500 text-white active:bg-pink-600 font-bold uppercase text-sm px-6 py-3 rounde- shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
             type="button"
             onClick={() => handleOpen()}
           >
@@ -166,9 +134,8 @@ export default function Home() {
             </div>
           </div>
         ))}
-        {imgSrc && <Image src={imgSrc} width={100} height={100} alt="smth" />}
       </div>
-
+      {/* via text */}
       <>
         {open ? (
           <>
@@ -212,7 +179,7 @@ export default function Home() {
                       className="bg-emerald-500 text-white active:bg-emerald-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
                       type="button"
                       onClick={() => {
-                        addItem(itemName);
+                        addItem(itemName.toLowerCase().trim());
                         setItemName("");
                         handleClose();
                       }}
@@ -250,45 +217,55 @@ export default function Home() {
                   </div>
                   {/*body*/}
                   <div className="relative p-6 flex-auto">
-                    {isLoading ? (
-                      <div class="flex space-x-2 justify-center items-center bg-white h-300">
-                        <span class="sr-only">Loading...</span>
-                        <div class="h-8 w-8 bg-black rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                        <div class="h-8 w-8 bg-black rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                        <div class="h-8 w-8 bg-black rounded-full animate-bounce"></div>
-                      </div>
-                    ) : (
-                      <div className="relative">
-                        <Webcam
-                          // ref={webcamRef}
-                          mirrored={true}
-                          screenshotFormat="image/jpeg"
-                          muted
-                          className="rounded-lg w-full"
-                        >
-                          {({ getScreenshot }) => (
-                            <button
-                              className="bg-gray-500 text-white active:bg-gray-600 font-bold uppercase text-sm my-4 px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
-                              type="button"
-                              onClick={() => {
-                                let imageSrc = getScreenshot();
-                                setImgSrc(imageSrc);
-                              }}
-                            >
-                              Take Photo
-                            </button>
-                          )}
-                        </Webcam>
-                        <button onClick={handleImageInput}> send it</button>
-                      </div>
-                    )}
+                    <div className="relative">
+                      {imgSrc == null ? (
+                        <>
+                          <Webcam
+                            mirrored={true}
+                            screenshotFormat="image/jpeg"
+                            muted
+                            className="rounded-lg w-full"
+                          >
+                            {({ getScreenshot }) => (
+                              <button
+                                className="bg-gray-500 text-white active:bg-gray-600 font-bold uppercase text-sm my-4 px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
+                                type="button"
+                                onClick={() => {
+                                  let imageSrc = getScreenshot();
+                                  setImgSrc(imageSrc);
+                                }}
+                              >
+                                Take Photo
+                              </button>
+                            )}
+                          </Webcam>
+                        </>
+                      ) : (
+                        <>
+                          <Image
+                            src={imgSrc}
+                            width={500}
+                            height={500}
+                            alt="smth"
+                          />
+                          <button onClick={handleImageInput}> Add item</button>
+                          <button onClick={() => setImgSrc(null)}>
+                            {" "}
+                            retake
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                   {/*footer*/}
                   <div className="flex items-center justify-end p-6 border-t border-solid border-blueGray-200 rounded-b">
                     <button
                       className="text-red-500 background-transparent font-bold uppercase px-6 py-2 text-sm outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
                       type="button"
-                      onClick={() => handleCloseCam()}
+                      onClick={() => {
+                        handleCloseCam();
+                        setImgSrc(null);
+                      }}
                     >
                       Close
                     </button>
@@ -296,9 +273,8 @@ export default function Home() {
                       className="bg-emerald-500 text-white active:bg-emerald-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
                       type="button"
                       onClick={() => {
-                        addItem(itemName);
-                        setItemName("");
-                        handleClose();
+                        handleImageInput();
+                        handleCloseCam();
                       }}
                     >
                       Add Item

@@ -1,7 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GoogleAIFileManager } from "@google/generative-ai/server";
+import { NextResponse } from "next/server";
 
-export async function POST(req, res) {
+export async function POST(request) {
   // Initialize GoogleGenerativeAI with your API_KEY.
   const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY);
 
@@ -16,10 +17,18 @@ export async function POST(req, res) {
   );
 
   try {
-    const reqBody = await req.json();
+    const reqBody = await request.json();
     const { img } = reqBody;
 
-    const prompt = "what is in this image?";
+    if (!img) {
+      return NextResponse.json(
+        { error: "No image data received" },
+        { status: 400 }
+      );
+    }
+
+    const prompt =
+      "what iten is the person holding in the image and how many is there in the image? reply with a json format. { itemName: '_' , quantity: '_' }";
     const image = {
       inlineData: {
         data: img.split(",")[1],
@@ -28,11 +37,16 @@ export async function POST(req, res) {
     };
 
     const result = await model.generateContent([prompt, image]);
-    console.log(`this is the output: ${result.response.text()}`);
-
-    res.json({ output: result.response.text() });
+    const msg = result.response.text();
+    return NextResponse.json(msg);
   } catch (error) {
     console.error("An error occurred🔴:", error);
-    res.json({ error: "An error occurred while processing your request." });
+    return NextResponse.json(
+      {
+        error: "An error occurred during object detection",
+        details: error.message,
+      },
+      { status: 500 }
+    );
   }
 }
